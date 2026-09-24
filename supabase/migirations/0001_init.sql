@@ -193,7 +193,8 @@ create trigger trg_lists_updated_at
 --    lists it appears in, with how many times. This is the trust proxy that
 --    stands in (for now) for a social/follow layer.
 -- ===========================================================================
-create or replace view restaurant_occasion_tags as
+create or replace view restaurant_occasion_tags
+with (security_invoker = on) as
 select
   li.restaurant_id,
   o.id    as occasion_id,
