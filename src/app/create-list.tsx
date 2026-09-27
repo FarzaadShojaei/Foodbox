@@ -7,6 +7,7 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
+  Switch,
   TextInput,
   View,
 } from 'react-native';
@@ -205,28 +206,23 @@ export default function CreateListScreen() {
               })}
             </View>
 
-            <ThemedText type="small" themeColor="textSecondary">
-              Visibility
-            </ThemedText>
-            <View style={styles.visibilityRow}>
-              {(['public', 'private'] as Visibility[]).map((v) => {
-                const selected = v === visibility;
-                return (
-                  <Pressable
-                    key={v}
-                    onPress={() => setVisibility(v)}
-                    style={[
-                      styles.visibilityButton,
-                      {
-                        backgroundColor: selected ? BRAND : theme.backgroundElement,
-                      },
-                    ]}>
-                    <ThemedText type="small" style={{ color: selected ? '#ffffff' : theme.text }}>
-                      {v === 'public' ? 'Public' : 'Private'}
-                    </ThemedText>
-                  </Pressable>
-                );
-              })}
+            <View style={[styles.switchRow, { backgroundColor: theme.backgroundElement }]}>
+              <View style={styles.switchTexts}>
+                <ThemedText type="default">
+                  {visibility === 'public' ? 'Public' : 'Private'}
+                </ThemedText>
+                <ThemedText type="small" themeColor="textSecondary">
+                  {visibility === 'public'
+                    ? 'Anyone can see this list'
+                    : 'Only you can see this list'}
+                </ThemedText>
+              </View>
+              <Switch
+                value={visibility === 'public'}
+                onValueChange={(isPublic) => setVisibility(isPublic ? 'public' : 'private')}
+                trackColor={{ true: BRAND, false: theme.backgroundSelected }}
+                thumbColor="#ffffff"
+              />
             </View>
 
             <ThemedText type="small" themeColor="textSecondary" style={styles.sectionSpacer}>
@@ -290,13 +286,14 @@ const styles = StyleSheet.create({
   noteInput: { marginTop: Spacing.two, fontSize: 14 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
   chip: { paddingHorizontal: Spacing.three, paddingVertical: Spacing.two, borderRadius: Spacing.five },
-  visibilityRow: { flexDirection: 'row', gap: Spacing.two },
-  visibilityButton: {
-    flex: 1,
+  switchRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: Spacing.three,
+    justifyContent: 'space-between',
+    padding: Spacing.three,
     borderRadius: Spacing.three,
   },
+  switchTexts: { flex: 1, gap: Spacing.half, marginRight: Spacing.three },
   sectionSpacer: { marginTop: Spacing.two },
   restaurantRow: { marginBottom: Spacing.three },
   addRow: { paddingVertical: Spacing.two },
