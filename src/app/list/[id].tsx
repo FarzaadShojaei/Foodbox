@@ -30,6 +30,7 @@ export default function ListDetailScreen() {
   const [list, setList] = useState<ListHeader | null>(null);
   const [items, setItems] = useState<ListItemRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const { liked, saved, likeCount, toggleLike, toggleSave } = useListInteractions(
     id,
@@ -40,19 +41,23 @@ export default function ListDetailScreen() {
     let active = true;
     (async () => {
       setLoading(true);
-      const { data: header } = await supabase
+      setError(null);
+      const { data: header, error: headerError } = await supabase
         .from('lists')
-        .select('id, title, city, like_count, occasions(label, icon), profiles(display_name)')
+        .select('id, title, city, like_count, occasions(label, icon), profiles!owner_id(display_name)')
         .eq('id', id)
-        .single();
+        .maybeSingle();
 
-      const { data: rows } = await supabase
+      const { data: rows, error: itemsError } = await supabase
         .from('list_items')
         .select('id, position, note, restaurants(id, name, city, cover_image_url, rating)')
         .eq('list_id', id)
         .order('position', { ascending: true });
 
       if (!active) return;
+      // Surface the real error instead of a generic "not found".
+      if (headerError) setError(headerError.message);
+      else if (itemsError) setError(itemsError.message);
       // Joined relations infer as arrays without generated types; they're
       // objects at runtime for to-one FKs, so cast through unknown.
       setList((header ?? null) as unknown as ListHeader | null);
@@ -76,6 +81,10 @@ export default function ListDetailScreen() {
 
         {loading ? (
           <ActivityIndicator style={styles.loader} />
+        ) : error ? (
+          <ThemedText type="small" style={styles.errorText}>
+            {error}
+          </ThemedText>
         ) : list ? (
           <ScrollView contentContainerStyle={styles.content}>
             <View style={styles.header}>
@@ -183,4 +192,5 @@ const styles = StyleSheet.create({
   rank: { fontWeight: '700', color: '#cc5500' },
   name: { fontWeight: '600', flex: 1 },
   notFound: { padding: Spacing.four },
+  errorText: { padding: Spacing.four, color: '#e5484d' },
 });
