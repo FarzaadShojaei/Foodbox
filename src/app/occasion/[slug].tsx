@@ -1,5 +1,5 @@
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -24,36 +24,40 @@ export default function OccasionScreen() {
   const [lists, setLists] = useState<ListRow[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    let active = true;
-    (async () => {
-      setLoading(true);
-      const { data: occ } = await supabase
-        .from('occasions')
-        .select('id, slug, label, icon, sort_order')
-        .eq('slug', slug)
-        .single();
-      if (!active) return;
-      setOccasion(occ ?? null);
-
-      if (occ) {
-        const { data: rows } = await supabase
-          .from('lists')
-          .select('id, title, city, visibility, like_count, occasion_id, owner_id, created_at, profiles(display_name)')
-          .eq('occasion_id', occ.id)
-          .eq('visibility', 'public')
-          .order('created_at', { ascending: false });
+  // Refetch every time the screen is focused, so a list created on the
+  // create-list modal shows up as soon as we return here.
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      (async () => {
+        setLoading(true);
+        const { data: occ } = await supabase
+          .from('occasions')
+          .select('id, slug, label, icon, sort_order')
+          .eq('slug', slug)
+          .single();
         if (!active) return;
-        // Supabase infers joined relations as arrays without generated types;
-        // for a to-one FK it's an object at runtime, so cast through unknown.
-        setLists((rows ?? []) as unknown as ListRow[]);
-      }
-      setLoading(false);
-    })();
-    return () => {
-      active = false;
-    };
-  }, [slug]);
+        setOccasion(occ ?? null);
+
+        if (occ) {
+          const { data: rows } = await supabase
+            .from('lists')
+            .select('id, title, city, visibility, like_count, occasion_id, owner_id, created_at, profiles!owner_id(display_name)')
+            .eq('occasion_id', occ.id)
+            .eq('visibility', 'public')
+            .order('created_at', { ascending: false });
+          if (!active) return;
+          // Joined relations infer as arrays without generated types;
+          // for a to-one FK it's an object at runtime, so cast through unknown.
+          setLists((rows ?? []) as unknown as ListRow[]);
+        }
+        setLoading(false);
+      })();
+      return () => {
+        active = false;
+      };
+    }, [slug]),
+  );
 
   function onCreate() {
     runProtected(() =>
