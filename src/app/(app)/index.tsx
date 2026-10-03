@@ -55,11 +55,18 @@ export default function HomeScreen() {
               </ThemedText>
             </View>
             {user ? (
-              <Pressable onPress={signOut} hitSlop={8}>
-                <ThemedText type="link" style={{ color: BRAND }}>
-                  Sign out
-                </ThemedText>
-              </Pressable>
+              <View style={styles.headerActions}>
+                <Pressable onPress={() => router.push('/me')} hitSlop={8}>
+                  <ThemedText type="link" style={{ color: BRAND }}>
+                    My lists
+                  </ThemedText>
+                </Pressable>
+                <Pressable onPress={signOut} hitSlop={8}>
+                  <ThemedText type="small" themeColor="textSecondary">
+                    Sign out
+                  </ThemedText>
+                </Pressable>
+              </View>
             ) : (
               <Pressable onPress={() => router.push('/sign-in')} hitSlop={8}>
                 <ThemedText type="link" style={{ color: BRAND }}>
@@ -126,6 +133,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   headerText: { gap: Spacing.half },
+  headerActions: { alignItems: 'flex-end', gap: Spacing.one },
   brand: { fontSize: 34, lineHeight: 40 },
   prompt: { marginTop: Spacing.two },
   newListButton: {
